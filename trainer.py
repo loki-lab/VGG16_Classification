@@ -25,6 +25,7 @@ class Trainer:
 
     def training_step(self, batch):
         self.model.train()
+        total_labels = 0
         images, labels = batch
         images = images.to(self.device)
         labels = labels.to(self.device)
@@ -36,11 +37,13 @@ class Trainer:
         loss.backward()
         self.configure_optimizers().step()
         total_loss, total_correct = self.get_total_result(output, labels, loss)
+        total_labels += labels.size(0)
 
-        return total_loss, total_correct
+        return total_loss, total_correct, total_labels
 
     def validation_step(self, batch):
         self.model.eval()
+        total_labels = 0
         images, labels = batch
         images = images.to(self.device)
         labels = labels.to(self.device)
@@ -48,30 +51,31 @@ class Trainer:
         output = self.model(images)
         loss = self.criterion(output, labels)
         total_loss, total_correct = self.get_total_result(output, labels, loss)
+        total_labels += labels.size(0)
 
-        return total_loss, total_correct
+        return total_loss, total_correct, total_labels
 
     def training(self, train_loader):
         total_correct = 0
         total_loss = 0
+        total_labels = 0
 
         for batch in tqdm(train_loader):
-            total_loss, total_correct = self.training_step(batch)
-        accuracy = total_correct / len(train_loader)
-        loss_in_epoch = total_loss / len(train_loader)
-        print(len(train_loader))
+            total_loss, total_correct, total_labels = self.training_step(batch)
+        accuracy = total_correct / total_labels
+        loss_in_epoch = total_loss / total_labels
         return accuracy, loss_in_epoch
 
     def validation(self, val_loader):
         val_total_correct = 0
         val_total_loss = 0
+        val_total_labels = 0
 
         for batch in tqdm(val_loader):
-            val_total_loss, val_total_correct = self.training_step(batch)
-        accuracy = val_total_correct / len(val_loader)
-        loss_in_epoch = val_total_loss / len(val_loader)
-        print(len(val_loader))
-        return accuracy, loss_in_epoch
+            val_total_loss, val_total_correct, val_total_labels = self.validation_step(batch)
+        val_accuracy = val_total_correct / val_total_labels
+        val_loss_in_epoch = val_total_loss / val_total_labels
+        return val_accuracy, val_loss_in_epoch
 
     def save_checkpoint(self, loss, accuracy, epoch, model, optimizer):
         if accuracy > self.best_metric:
