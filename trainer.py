@@ -51,11 +51,9 @@ class Trainer:
         for epoch in range(max_epoch):
             print(f"___ Epoch {epoch + 1}/{max_epoch} ___")
             for batch in tqdm(train_loader):
-                batch = batch.to(device)
                 loss, metrics = self.training_step(batch)
             print(f"Training: Loss: {loss:.4f}, Accuracy: {metrics:.4f}")
 
             for val_batch in tqdm(val_loader):
-                val_batch = val_batch.to(device)
                 val_loss, val_metrics = self.validation_step(val_batch)
             print(f"Validation: Loss: {val_loss:.4f}, Accuracy: {val_metrics:.4f}\n")
