@@ -59,7 +59,7 @@ class Trainer:
             total_loss, total_correct = self.training_step(batch)
         accuracy = total_correct / len(train_loader)
         loss_in_epoch = total_loss / len(train_loader)
-
+        print(len(train_loader))
         return accuracy, loss_in_epoch
 
     def validation(self, val_loader):
@@ -70,7 +70,7 @@ class Trainer:
             val_total_loss, val_total_correct = self.training_step(batch)
         accuracy = val_total_correct / len(val_loader)
         loss_in_epoch = val_total_loss / len(val_loader)
-
+        print(len(val_loader))
         return accuracy, loss_in_epoch
 
     def save_checkpoint(self, loss, accuracy, epoch, model, optimizer):
