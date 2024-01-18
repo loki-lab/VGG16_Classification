@@ -42,12 +42,12 @@ class Trainer:
 
         return loss, metrics
 
-    def fit(self, max_epoch, train_loader, val_loader, device):
+    def fit(self, max_epoch, train_loader, val_loader):
         loss = 0
         metrics = 0
         val_loss = 0
         val_metrics = 0
-        self.model.to(device)
+        self.model.to(self.device)
 
         for epoch in range(max_epoch):
             print(f"___ Epoch {epoch + 1}/{max_epoch} ___")
