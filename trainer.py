@@ -13,9 +13,12 @@ class Trainer:
     def configure_optimizers(self):
         return Adam(self.model.parameters(), lr=0.0001)
 
-    def training_step(self, batch):
+    def training_step(self, batch, device):
         self.model.train()
         images, labels = batch
+        images = images.to(device)
+        labels = labels.to(device)
+
         output = self.model(images)
         loss = self.criterion(output, labels)
         metrics = self.metric(output, labels)
@@ -26,9 +29,12 @@ class Trainer:
 
         return loss, metrics
 
-    def validation_step(self, batch):
+    def validation_step(self, batch, device):
         self.model.eval()
         images, labels = batch
+        images = images.to(device)
+        labels = labels.to(device)
+
         output = self.model(images)
         loss = self.criterion(output, labels)
         metrics = self.metric(output, labels)
