@@ -16,6 +16,15 @@ class Trainer:
     def configure_optimizers(self):
         return Adam(self.model.parameters(), lr=0.0001)
 
+    @staticmethod
+    def get_total_result(output, target, loss):
+        total_loss = 0
+        total_correct = 0
+        _, predicted = torch.max(output, 1)
+        total_correct += predicted.eq(target).sum().item()
+        total_loss += loss.item()
+        return total_loss, total_correct
+
     def training_step(self, batch):
         self.model.train()
         images, labels = batch
@@ -24,13 +33,13 @@ class Trainer:
 
         output = self.model(images)
         loss = self.criterion(output, labels)
-        metrics = self.metric(output, labels)
 
         self.configure_optimizers().zero_grad()
         loss.backward()
         self.configure_optimizers().step()
+        total_loss, total_correct = self.get_total_result(output, labels, loss)
 
-        return loss, metrics
+        return total_loss, total_correct
 
     def validation_step(self, batch):
         self.model.eval()
@@ -40,9 +49,31 @@ class Trainer:
 
         output = self.model(images)
         loss = self.criterion(output, labels)
-        metrics = self.metric(output, labels)
+        total_loss, total_correct = self.get_total_result(output, labels, loss)
 
-        return loss, metrics
+        return total_loss, total_correct
+
+    def training(self, train_loader):
+        total_correct = 0
+        total_loss = 0
+
+        for batch in train_loader:
+            total_loss, total_correct = self.training_step(batch)
+        accuracy = total_correct / len(train_loader.dataset)
+        loss_in_epoch = total_loss / len(train_loader.dataset)
+
+        return accuracy, loss_in_epoch
+
+    def validation(self, val_loader):
+        total_correct = 0
+        total_loss = 0
+
+        for batch in val_loader:
+            total_loss, total_correct = self.training_step(batch)
+        accuracy = total_correct / len(val_loader.dataset)
+        loss_in_epoch = total_loss / len(val_loader.dataset)
+
+        return accuracy, loss_in_epoch
 
     def save_checkpoint(self, loss, accuracy, epoch, model, optimizer):
         if accuracy > self.best_metric:
@@ -62,20 +93,17 @@ class Trainer:
         }, "./checkpoints/last_checkpoint.pth")
 
     def fit(self, max_epoch, train_loader, val_loader):
-        loss = 0
-        metrics = 0
-        val_loss = 0
-        val_metrics = 0
-        self.model.to(self.device)
 
+        self.model.to(self.device)
         for epoch in range(max_epoch):
             print(f"___ Epoch {epoch + 1}/{max_epoch} ___")
-            for batch in tqdm(train_loader):
-                loss, metrics = self.training_step(batch)
-            print(f"Training: Loss: {loss:.4f}, Accuracy: {metrics:.4f}")
 
-            for val_batch in tqdm(val_loader):
-                val_loss, val_metrics = self.validation_step(val_batch)
-            print(f"Validation: Loss: {val_loss:.4f}, Accuracy: {val_metrics:.4f}\n")
+            print("Training:")
+            loss, metrics = self.training(train_loader)
+            print(f"Training result: Loss: {loss:.4f}, Accuracy: {metrics:.4f}")
+
+            print("Validating:")
+            val_loss, val_metrics = self.validation(val_loader)
+            print(f"Validation result: Loss: {val_loss:.4f}, Accuracy: {val_metrics:.4f}\n")
 
             self.save_checkpoint(epoch, val_loss, val_metrics, self.model, self.configure_optimizers())
