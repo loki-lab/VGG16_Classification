@@ -57,21 +57,21 @@ class Trainer:
         total_correct = 0
         total_loss = 0
 
-        for batch in train_loader:
+        for batch in tqdm(train_loader):
             total_loss, total_correct = self.training_step(batch)
-        accuracy = total_correct / len(train_loader.dataset)
-        loss_in_epoch = total_loss / len(train_loader.dataset)
+        accuracy = total_correct / len(train_loader)
+        loss_in_epoch = total_loss / len(train_loader)
 
         return accuracy, loss_in_epoch
 
     def validation(self, val_loader):
-        total_correct = 0
-        total_loss = 0
+        val_total_correct = 0
+        val_total_loss = 0
 
-        for batch in val_loader:
-            total_loss, total_correct = self.training_step(batch)
-        accuracy = total_correct / len(val_loader.dataset)
-        loss_in_epoch = total_loss / len(val_loader.dataset)
+        for batch in tqdm(val_loader):
+            val_total_loss, val_total_correct = self.training_step(batch)
+        accuracy = val_total_correct / len(val_loader)
+        loss_in_epoch = val_total_loss / len(val_loader)
 
         return accuracy, loss_in_epoch
 
@@ -84,6 +84,7 @@ class Trainer:
                 'loss': loss,
             }, "./checkpoints/best_checkpoint.pth")
             self.best_metric = accuracy
+            print("Saved best checkpoint")
 
         torch.save({
             'epoch': epoch,
