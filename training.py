@@ -30,5 +30,5 @@ if __name__ == "__main__":
 
     model = VGG16(num_classes=2)
 
-    trainer = Trainer(model)
+    trainer = Trainer(model, device=device)
     trainer.fit(max_epoch=30, train_loader=train_dl, val_loader=val_dl)
