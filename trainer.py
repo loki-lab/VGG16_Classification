@@ -2,6 +2,7 @@ from torchmetrics import Accuracy
 from torch import nn
 from torch.optim import Adam
 from tqdm import tqdm
+import torch
 
 
 class Trainer:
@@ -10,6 +11,7 @@ class Trainer:
         self.device = device
         self.metric = Accuracy(task="multiclass", num_classes=model.num_classes).to(self.device)
         self.criterion = nn.CrossEntropyLoss()
+        self.best_metric = 0
 
     def configure_optimizers(self):
         return Adam(self.model.parameters(), lr=0.0001)
@@ -42,6 +44,23 @@ class Trainer:
 
         return loss, metrics
 
+    def save_checkpoint(self, loss, accuracy, epoch, model, optimizer):
+        if accuracy > self.best_metric:
+            torch.save({
+                'epoch': epoch,
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'loss': loss,
+            }, "./checkpoints/best_checkpoint.pth")
+            self.best_metric = accuracy
+
+        torch.save({
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'loss': loss,
+        }, "./checkpoints/last_checkpoint.pth")
+
     def fit(self, max_epoch, train_loader, val_loader):
         loss = 0
         metrics = 0
@@ -58,3 +77,5 @@ class Trainer:
             for val_batch in tqdm(val_loader):
                 val_loss, val_metrics = self.validation_step(val_batch)
             print(f"Validation: Loss: {val_loss:.4f}, Accuracy: {val_metrics:.4f}\n")
+
+            self.save_checkpoint(epoch, val_loss, val_metrics, self.model, self.configure_optimizers())

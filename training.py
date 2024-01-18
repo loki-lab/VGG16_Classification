@@ -10,7 +10,7 @@ if __name__ == "__main__":
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    path = "./PetImg"
+    path = "./dataset/PetImg"
     train_size = 20000
     val_size = 5000
 
