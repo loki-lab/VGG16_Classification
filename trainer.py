@@ -1,4 +1,3 @@
-from torchmetrics import Accuracy
 from torch import nn
 from torch.optim import Adam
 from tqdm import tqdm
@@ -9,7 +8,6 @@ class Trainer:
     def __init__(self, model, device="cpu"):
         self.model = model
         self.device = device
-        self.metric = Accuracy(task="multiclass", num_classes=model.num_classes).to(self.device)
         self.criterion = nn.CrossEntropyLoss()
         self.best_metric = 0
 
